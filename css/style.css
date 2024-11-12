@@ -1,0 +1,331 @@
+:root {
+    --color-primary: #293040;
+    --color-secondary: #02734A;
+    --color-tertiary: #c43737;
+    --color-fourth: #872424;
+    --color-accent: #04D976;
+    --color-highlight: #03A65A;
+    --color-background: #F2F2F2;
+}
+
+body {
+    font-family: Arial;
+    background-color: var(--color-background);
+    color: var(--color-primary);
+}
+
+
+.container {
+    max-width: 400px; /* Ajusta el ancho del contenedor */
+    margin: 50px auto; /* Centra el contenedor verticalmente */
+    padding: 30px;
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+
+}
+
+.container2 {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    color: var(--color-primary); /* Usa el color primario de tu paleta */
+  }
+  
+.form-group {
+    margin-bottom: 20px;
+  }
+  
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--color-primary); /* Usa el color primario de tu paleta */
+  }
+  
+.form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    box-sizing: border-box;
+  }
+
+.form-group2 {
+    margin-bottom: 20px;
+  }
+  
+.form-group2 label {
+    display: block;
+    margin-bottom: 5px;
+    color: var(--color-primary); 
+  }
+  
+.form-group2 input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  
+.error-message {
+    color: var(--color-tertiary); 
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.btn {
+    display: inline-block;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+    background-color: var(--color-accent);
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: var(--color-highlight);
+}
+
+.btn-secondary {
+    background-color: var(--color-secondary);
+    color: white;
+}
+
+.btn-secondary:hover {
+    background-color: var(--color-primary);
+}
+
+.btn-tertiary {
+    background-color: var(--color-tertiary);
+}
+
+.btn-tertiary a {
+    color: white; 
+    text-decoration: none; 
+}
+
+.btn-tertiary:hover {
+    background-color: var(--color-fourth);
+}
+
+.routines-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+    gap: 20px;
+}
+
+/* Estilos para la cuadrícula de rutinas y dietas */
+.routines-grid,
+.diets-grid,
+.recen  t-grid {
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr); /* Crea 3 columnas con igual ancho */
+    gap: 20px; /* Espacio entre las cards */
+}
+
+.routine-card,
+.diet-card,
+.recent-card {
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.routine-card:hover,
+.diet-card:hover,
+.recent-card:hover {
+    transform: translateY(-5px);
+}
+
+.routine-image,
+.diet-image,
+.recent-image {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
+}
+
+.routine-card h3,
+.diet-card h3,
+.recent-card h3 {
+    font-size: 1.2rem;
+    margin: 10px;
+}
+
+.routine-card p,
+.diet-card p,
+.recent-card p {
+    font-size: 0.9rem;
+    margin: 5px 10px;
+}
+
+.btn-favorite {
+    background-color: var(--color-accent);
+    color: white;
+    border: none;
+    padding: 5px 10px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+}
+
+.btn-favorite:hover {
+    background-color: var(--color-highlight);
+}
+
+/* Estilos para los filtros */
+.filters {
+    height: auto;
+    display: flex;
+    background-color: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    margin-bottom: 20px;
+    align-items: center; 
+  }
+  
+  .filters .form-group {
+    margin-bottom: 0; 
+    margin-right: 20px; 
+    flex: 1; 
+  }
+  
+  .filters label {
+    display: block;
+    margin-bottom: 5px; 
+  }
+  
+  .filters select,
+  .filters input[type="text"] {
+    height: 40px;
+    width: 100%;
+    padding: 8px; 
+    border: 1px solid #ccc;
+    border-radius: 4px;
+  }
+  
+  .filters button {
+    background-color: var(--color-accent);
+    color: white;
+    border: none;
+    padding: 15px 20px;
+    align-self: flex-end;
+    border-radius: 4px;
+    cursor: pointer;
+  }
+
+/* Estilos para la sección de recientes */
+.recent-section {
+    margin-top: 40px;
+}
+
+.recent-section h2 {
+    font-size: 1.5rem;
+    margin-bottom: 20px;
+}
+
+
+/* Estilos para el header */
+.site-header {
+    background-color: var(--color-primary);
+    padding: 1rem 0;
+}
+
+.main-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.logo {
+    color: var(--color-accent);
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-links li {
+    margin-left: 1rem;
+}
+
+.nav-links a {
+    color: var(--color-background);
+    text-decoration: none;
+    transition: color 0.3s ease;
+}
+
+.nav-links a:hover {
+    color: var(--color-accent);
+}
+
+/* Estilos para el footer */
+.site-footer {
+    background-color: var(--color-primary);
+    color: var(--color-background);
+    padding: 1rem 0;
+    text-align: center;
+}
+
+/* Estilos para el dashboard */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+.dashboard-section {
+    background-color: white;
+    border-radius: 5px;
+    padding: 1.5rem;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+/* Estilos para los formularios */
+.form-register, .form-profile {
+    max-width: 400px;
+    margin: 0 auto;
+}
+
+.profile-picture-header {
+    width:50px; 
+    height: 50px;
+    margin-left: 20px;
+    border-radius: 50%;
+}
+
+.profile-picture {
+    width: 150px; 
+    height: 150px;
+    border-radius: 50%; 
+    overflow: hidden; 
+  }
+  
+  .profile-picture img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover; 
+  }
