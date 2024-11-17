@@ -1,5 +1,5 @@
 <?php
-require_once './includes/functions.php';
+
 if (isLoggedIn()) {
     header("Location: index.php");
     exit();
@@ -8,7 +8,7 @@ if (isLoggedIn()) {
 
 <div class="container">
     <h2>Registro</h2>
-    <form action="registro_process" method="POST" class="form-register">
+    <form action="registro_process" method="POST" class="form-register2" id="registerForm">
         <div class="form-group">
             <label for="username">Nombre de usuario:</label>
             <input type="text" id="username" name="username" required>
@@ -29,3 +29,4 @@ if (isLoggedIn()) {
     </form>
     <p>¿Ya tienes una cuenta? <a href="login.php">Inicia sesión aquí</a></p>
 </div>
+

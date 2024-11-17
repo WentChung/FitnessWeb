@@ -36,6 +36,10 @@ $routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="container2">
     <h2>Rutinas de entrenamiento</h2>
+
+    <div class="search-container">
+        <input type="text" id="searchRoutines" placeholder="Buscar rutinas..." class="search-input">
+    </div>
     
     <form action="" method="GET" class="filters">
         <div class="form-group">
@@ -69,9 +73,9 @@ $routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <button type="submit" class="btn btn-primary">Filtrar</button>
     </form>
 
-    <div class="routines-grid">
+    <div id="routinesGrid" class="routines-grid">
         <?php foreach ($routines as $routine): ?>
-            <div class="routine-card">
+            <div class="routine-card" data-name="<?php echo htmlspecialchars(strtolower($routine['name'])); ?>">
                 <img src="<?php echo htmlspecialchars($routine['image_url']); ?>" alt="<?php echo htmlspecialchars($routine['name']); ?>" class="routine-image">
                 <h3><?php echo htmlspecialchars($routine['name']); ?></h3>
                 <p>Nivel: <?php echo htmlspecialchars($routine['level']); ?></p>
@@ -79,34 +83,65 @@ $routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <p>Duración: <?php echo htmlspecialchars($routine['duration']); ?> minutos</p>
                 <p>Calorías quemadas: <?php echo htmlspecialchars($routine['calories_burned']); ?></p>
                 <a href="routine_details?id=<?php echo $routine['id']; ?>" class="btn btn-secondary">Ver detalles</a>
-                <button class="btn btn-favorite" data-id="<?php echo $routine['id']; ?>" data-type="routine">Agregar a favoritos</button>
+                <button class="btn btn-favorite" data-id="<?php echo $routine['id']; ?>" data-type="routine">
+                    <span class="favorite-icon">&#9733;</span>
+                </button>
             </div>
         <?php endforeach; ?>
     </div>
 </div>
 
+<script src="js/notifications.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const favoriteButtons = document.querySelectorAll('.btn-favorite');
-    favoriteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            const type = this.getAttribute('data-type');
-            addToFavorites(type, id);
+    const searchInput = document.getElementById('searchRoutines');
+    const routinesGrid = document.getElementById('routinesGrid');
+    const routineCards = routinesGrid.querySelectorAll('.routine-card');
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+
+        routineCards.forEach(card => {
+            const routineName = card.getAttribute('data-name');
+            if (routineName.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
         });
     });
-});
 
-function addToFavorites(type, id) {
-    fetch(`/api/add_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Agregado a favoritos exitosamente');
-            } else {
-                alert('Error al agregar a favoritos');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-}
+    routinesGrid.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
+            const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
+            const routineId = button.getAttribute('data-id');
+            addToFavorites('routine', routineId, button);
+        }
+    });
+
+    function addToFavorites(type, id, button) {
+        fetch(`api/add_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    updateFavoriteButton(button, data.action);
+                } else {
+                    showNotification('Error al procesar favorito', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar favorito', 'error');
+            });
+    }
+
+    function updateFavoriteButton(button, action) {
+        if (action === 'added') {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    }
+});
 </script>

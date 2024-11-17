@@ -1,6 +1,7 @@
 <?php
 require_once './includes/functions.php';
 require_once './includes/database.php';
+require_once './js/notifications.js';
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $username = sanitizeInput($_POST['username']);
@@ -30,5 +31,16 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $_SESSION['error'] = $error;
         header("Location: login");
     }
+    
+    if ($user && password_verify($password, $user['password'])) {
+        $_SESSION['user_id'] = $user['id'];
+        $_SESSION['username'] = $user['username'];
+        echo "<script>showNotification('Inicio de sesión exitoso', 'success');</script>";
+        header("Location: index.php?page=home");
+        exit();
+    } else {
+        echo "<script>showNotification('Error al iniciar sesión. Verifica tus credenciales.', 'error');</script>";
+    }
+
 }
 ?>

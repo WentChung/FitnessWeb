@@ -7,10 +7,17 @@ redirectIfNotLoggedIn();
 $db = new Database();
 $conn = $db->getConnection();
 
+// Obtener información del usuario
+$stmt = $conn->prepare("SELECT * FROM users WHERE id = :user_id");
+$stmt->bindParam(':user_id', $_SESSION['user_id']);
+$stmt->execute();
+$user = $stmt->fetch(PDO::FETCH_ASSOC);
+
 // Obtener rutinas recientes
 $stmt = $conn->prepare("SELECT r.* FROM routines r 
                         JOIN routine_views rv ON r.id = rv.routine_id 
-                        WHERE rv.user_id = :user_id 
+                        WHERE rv.user_id = :user_id
+                        GROUP BY r.id 
                         ORDER BY rv.viewed_at DESC LIMIT 5");
 $stmt->bindParam(':user_id', $_SESSION['user_id']);
 $stmt->execute();
@@ -19,16 +26,141 @@ $recent_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 // Obtener dietas recientes
 $stmt = $conn->prepare("SELECT d.* FROM diets d 
                         JOIN diet_views dv ON d.id = dv.diet_id 
-                        WHERE dv.user_id = :user_id 
+                        WHERE dv.user_id = :user_id
+                        GROUP BY d.id  
                         ORDER BY dv.viewed_at DESC LIMIT 5");
 $stmt->bindParam(':user_id', $_SESSION['user_id']);
 $stmt->execute();
 $recent_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+$user_id = $_SESSION['user_id'];
+
+// Obtener el último peso registrado
+$stmt = $conn->prepare("SELECT weight, date FROM user_weight_tracking WHERE user_id = :user_id ORDER BY date DESC LIMIT 1");
+$stmt->bindParam(':user_id', $user_id);
+$stmt->execute();
+$last_weight = $stmt->fetch(PDO::FETCH_ASSOC);
+
+// Obtener los últimos 7 pesos registrados
+$stmt = $conn->prepare("SELECT weight, DATE(date) AS date FROM user_weight_tracking WHERE user_id = :user_id ORDER BY date DESC, id DESC LIMIT 7");
+$stmt->bindParam(':user_id', $user_id);
+$stmt->execute();
+$weight_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Obtener calorías consumidas en las últimas 24 horas
+$stmt = $conn->prepare("SELECT SUM(calories) as total_calories FROM user_calorie_intake WHERE user_id = :user_id AND date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)");
+$stmt->bindParam(':user_id', $user_id);
+$stmt->execute();
+$calories_consumed = $stmt->fetch(PDO::FETCH_ASSOC)['total_calories'] ?? 0;
+
+// Obtener rutinas completadas en los últimos 7 días
+$stmt = $conn->prepare("SELECT COUNT(*) as completed_routines FROM user_completed_routines WHERE user_id = :user_id AND completion_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
+$stmt->bindParam(':user_id', $user_id);
+$stmt->execute();
+$completed_routines = $stmt->fetch(PDO::FETCH_ASSOC)['completed_routines'];
+
+// Obtener rutinas pendientes
+$stmt = $conn->prepare("SELECT upi.id, r.name, upi.start_date FROM user_pending_items upi JOIN routines r ON upi.item_id = r.id WHERE upi.user_id = :user_id AND upi.item_type = 'routine' AND upi.completed = FALSE ORDER BY upi.start_date ASC");
+$stmt->bindParam(':user_id', $user_id);
+$stmt->execute();
+$pending_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// Obtener dietas pendientes
+$stmt = $conn->prepare("SELECT upi.id, d.name, upi.start_date 
+                        FROM user_pending_items upi 
+                        JOIN diets d ON upi.item_id = d.id 
+                        WHERE upi.user_id = :user_id 
+                        AND upi.item_type = 'diet' 
+                        AND upi.completed = FALSE 
+                        ORDER BY upi.start_date ASC");
+$stmt->bindParam(':user_id', $user_id);
+$stmt->execute();
+$pending_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
 ?>
 
 <div class="container2">
-    <h1>Bienvenido a FitnessApp</h1>
+    <h1>Bienvenido, <?php echo htmlspecialchars($user['username']); ?>!</h1>
     
+    <div class="dashboard">
+    <div class="dashboard-section">
+            <h2>Resumen</h2>
+            <p><?php 
+                if ($last_weight) {
+                    echo "Último peso registrado: " . $last_weight['weight'] . ' kg ';
+                } else {
+                    echo "No registrado";
+                }?>
+            </p>
+            <p>Calorías consumidas en las últimas 24h: <?php echo $calories_consumed; ?> kcal</p>
+            <p>Rutinas completadas en los ultimos 7 días: <?php echo $completed_routines; ?></p>
+            
+            <h3>Registrar nuevo peso</h3>
+            <form id="weightForm" action="api/add_weight.php" method="POST">
+                <label for="weight">Kg </label>
+                <input type="number" id="weight" name="weight" step="0.1" class="weight-input" required>
+                <button type="submit" class="btn btn-primary">Registrar</button>
+            </form>
+        </div>
+
+        <div class="dashboard-section">
+            <h2>Seguimiento de Peso</h2>
+            <canvas id="weightChart" width="400" height="200"></canvas>
+        </div>
+
+        <div class="dashboard-section">
+                <h2>Rutinas Pendientes</h2>
+                <?php if (empty($pending_routines)): ?>
+                    <p>No tienes rutinas pendientes.</p>
+                <?php else: ?>
+                    <form id="completeRoutinesForm">
+                        <ul id="pendingRoutinesList">
+                            <?php foreach ($pending_routines as $routine): ?>
+                                <li>
+                                    <input type="checkbox" id="routine_<?php echo $routine['id']; ?>" name="routines[]" value="<?php echo $routine['id']; ?>">
+                                    <label for="routine_<?php echo $routine['id']; ?>"><?php echo htmlspecialchars($routine['name']); ?></label>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <button type="submit" class="btn btn-primary">Completar</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+
+            <div class="dashboard-section">
+                <h2>Dietas Pendientes</h2>
+                <?php if (empty($pending_diets)): ?>
+                    <p>No tienes dietas pendientes.</p>
+                <?php else: ?>
+                    <form id="completeDietsForm">
+                        <ul id="pendingDietsList">
+                            <?php foreach ($pending_diets as $diet): ?>
+                                <li>
+                                    <input type="checkbox" id="diet_<?php echo $diet['id']; ?>" name="diets[]" value="<?php echo $diet['id']; ?>">
+                                    <label for="diet_<?php echo $diet['id']; ?>"><?php echo htmlspecialchars($diet['name']); ?></label>
+                                </li>
+                            <?php endforeach; ?>
+                        </ul>
+                        <button type="submit" class="btn btn-primary">Completar</button>
+                    </form>
+                <?php endif; ?>
+            </div>
+        <?php
+
+        if ($_SESSION['is_admin'] == 1) { 
+            echo '<div class="dashboard-section">';
+            echo '<h2>Funciones de Administrador</h2>';
+            echo '<div class="admin-options">';
+            echo '<a href="add_routine" class="btn btn-admin">☆ Añadir nueva rutina</a>';
+            echo '<a href="add_diet" class="btn btn-admin">☆ Añadir nueva dieta</a>';
+            echo '<a href="manage_content" class="btn btn-admin">☆ Gestionar Rutinas y Dietas</a>';
+            echo '</div>';
+            echo '</div>';
+        }
+        ?>
+    </div>
+    <br />
     <section class="recent-section">
         <h2>Rutinas recientes</h2>
         <div class="recent-grid">
@@ -37,12 +169,13 @@ $recent_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <img src="<?php echo htmlspecialchars($routine['image_url']); ?>" alt="<?php echo htmlspecialchars($routine['name']); ?>" class="recent-image">
                     <h3><?php echo htmlspecialchars($routine['name']); ?></h3>
                     <p>Nivel: <?php echo htmlspecialchars($routine['level']); ?></p>
-                    <a href="routine_details.php?id=<?php echo $routine['id']; ?>" class="btn btn-secondary">Ver detalles</a>
+                    <a href="index.php?page=routine_details&id=<?php echo $routine['id']; ?>" class="btn btn-secondary">Ver detalles</a>
                 </div>
             <?php endforeach; ?>
         </div>
     </section>
-
+    
+    <br />
     <section class="recent-section">
         <h2>Dietas recientes</h2>
         <div class="recent-grid">
@@ -51,9 +184,120 @@ $recent_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
                     <img src="<?php echo htmlspecialchars($diet['image_url']); ?>" alt="<?php echo htmlspecialchars($diet['name']); ?>" class="recent-image">
                     <h3><?php echo htmlspecialchars($diet['name']); ?></h3>
                     <p>Objetivo: <?php echo htmlspecialchars($diet['objective']); ?></p>
-                    <a href="diet_details.php?id=<?php echo $diet['id']; ?>" class="btn btn-secondary">Ver detalles</a>
+                    <a href="index.php?page=diet_details&id=<?php echo $diet['id']; ?>" class="btn btn-secondary">Ver detalles</a>
                 </div>
             <?php endforeach; ?>
         </div>
     </section>
 </div>
+
+<script src="js/notifications.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const weightForm = document.getElementById('weightForm');
+    const completeRoutinesForm = document.getElementById('completeRoutinesForm');
+    const completeDietsForm = document.getElementById('completeDietsForm');
+
+    weightForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        const formData = new FormData(this);
+
+        fetch('api/add_weight.php', {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Peso registrado correctamente', 'success');
+                const lastWeightElement = document.querySelector('.dashboard-section p:first-of-type');
+                lastWeightElement.textContent = `Último peso registrado: ${data.weight} kg (${data.date})`;
+                weightChart.data.labels.push(data.date);
+                weightChart.data.datasets[0].data.push(data.weight);
+                weightChart.update();
+            } else {
+                showNotification('Error al registrar el peso', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al registrar el peso', 'error');
+        });
+    });
+
+    const weightData = {
+    labels: <?php echo json_encode(array_column($weight_history, 'date')); ?>,
+    datasets: [{
+        label: 'Peso (kg)',
+        data: <?php echo json_encode(array_column($weight_history, 'weight')); ?>,
+        }]
+    };
+    const weightChartConfig = {
+    type: 'line',
+    data: weightData,
+    };
+    const weightChart = new Chart(document.getElementById('weightChart'), weightChartConfig);
+
+
+    if (completeRoutinesForm) {
+            completeRoutinesForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch('api/complete_routines.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        data.completed_ids.forEach(id => {
+                            document.getElementById(`routine_${id}`).closest('li').remove();
+                        });
+                        const completedRoutinesElement = document.querySelector('.dashboard-section p:nth-of-type(3)');
+                        const currentCount = parseInt(completedRoutinesElement.textContent.match(/\d+/)[0]);
+                        completedRoutinesElement.textContent = `Rutinas completadas (últimos 7 días): ${currentCount + data.completed_ids.length}`;
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error al completar las rutinas', 'error');
+                });
+            });
+        }
+
+        if (completeDietsForm) {
+            completeDietsForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                const formData = new FormData(this);
+
+                fetch('api/complete_diets.php', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        showNotification(data.message, 'success');
+                        data.completed_ids.forEach(id => {
+                            document.getElementById(`diet_${id}`).closest('li').remove();
+                        });
+                        const caloriesElement = document.querySelector('.dashboard-section p:nth-of-type(2)');
+                        const currentCalories = parseInt(caloriesElement.textContent.match(/\d+/)[0]);
+                        caloriesElement.textContent = `Calorías consumidas (últimas 24h): ${currentCalories + data.calories_added} kcal`;
+                    } else {
+                        showNotification(data.message, 'error');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    showNotification('Error al completar las dietas', 'error');
+                });
+            });
+        }
+    });
+</script>

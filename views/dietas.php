@@ -36,6 +36,10 @@ $diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 <div class="container2">
     <h2>Planes de alimentación</h2>
+
+    <div class="search-container">
+        <input type="text" id="searchDiets" placeholder="Buscar dietas..." class="search-input">
+    </div>
     
     <form action="" method="GET" class="filters">
         <div class="form-group">
@@ -74,43 +78,74 @@ $diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
         <button type="submit" class="btn btn-primary">Filtrar</button>
     </form>
 
-    <div class="diets-grid">
+    <div id="dietsGrid" class="diets-grid">
         <?php foreach ($diets as $diet): ?>
-            <div class="diet-card">
+            <div class="diet-card" data-name="<?php echo htmlspecialchars(strtolower($diet['name'])); ?>">
                 <img src="<?php echo htmlspecialchars($diet['image_url']); ?>" alt="<?php echo htmlspecialchars($diet['name']); ?>" class="diet-image">
                 <h3><?php echo htmlspecialchars($diet['name']); ?></h3>
                 <p>Objetivo: <?php echo htmlspecialchars($diet['objective']); ?></p>
                 <p>Tipo: <?php echo htmlspecialchars($diet['diet_type']); ?></p>
                 <p>Calorías: <?php echo htmlspecialchars($diet['calorie_target']); ?></p>
                 <a href="diet_details?id=<?php echo $diet['id']; ?>" class="btn btn-secondary">Ver detalles</a>
-                <button class="btn btn-favorite" data-id="<?php echo $diet['id']; ?>" data-type="diet">Agregar a favoritos</button>
+                <button class="btn btn-favorite" data-id="<?php echo $diet['id']; ?>" data-type="diet">
+                    <span class="favorite-icon">&#9733;</span>
+                </button>
             </div>
         <?php endforeach; ?>
     </div>
 </div>
 
+<script src="js/notifications.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const favoriteButtons = document.querySelectorAll('.btn-favorite');
-    favoriteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            const type = this.getAttribute('data-type');
-            addToFavorites(type, id);
+    const searchInput = document.getElementById('searchDiets');
+    const dietsGrid = document.getElementById('dietsGrid');
+    const dietCards = dietsGrid.querySelectorAll('.diet-card');
+
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase().trim();
+
+        dietCards.forEach(card => {
+            const dietName = card.getAttribute('data-name');
+            if (dietName.includes(searchTerm)) {
+                card.style.display = 'block';
+            } else {
+                card.style.display = 'none';
+            }
         });
     });
-});
 
-function addToFavorites(type, id) {
-    fetch(`/api/add_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                alert('Agregado a favoritos exitosamente');
-            } else {
-                alert('Error al agregar a favoritos');
-            }
-        })
-        .catch(error => console.error('Error:', error));
-}
+    dietsGrid.addEventListener('click', function(e) {
+        if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
+            const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
+            const dietId = button.getAttribute('data-id');
+            addToFavorites('diet', dietId, button);
+        }
+    });
+
+    function addToFavorites(type, id, button) {
+        fetch(`api/add_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
+                    updateFavoriteButton(button, data.action);
+                } else {
+                    showNotification('Error al procesar favorito', 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar favorito', 'error');
+            });
+    }
+
+    function updateFavoriteButton(button, action) {
+        if (action === 'added') {
+            button.classList.add('active');
+        } else {
+            button.classList.remove('active');
+        }
+    }
+});
 </script>

@@ -11,6 +11,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $email = sanitizeInput($_POST['email']);
     $password = $_POST['password'];
     $confirm_password = $_POST['confirm_password'];
+    $profile_picture_url = sanitizeInput($_POST['profile_picture_url']);
 
     $update_fields = [];
     $params = [":user_id" => $_SESSION['user_id']];
@@ -24,6 +25,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $update_fields[] = "password = :password";
         $params[":password"] = password_hash($password, PASSWORD_DEFAULT);
     }
+
+    if (!empty($profile_picture_url)) {
+
+        $update_fields[] = "profile_picture = :profile_picture";
+        $params[":profile_picture"] = $profile_picture_url;
+
+        $_SESSION['profile_picture'] = $profile_picture_url; 
+    }   
 
     if (!empty($update_fields)) {
         $sql = "UPDATE users SET " . implode(", ", $update_fields) . " WHERE id = :user_id";
@@ -39,4 +48,5 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     header("Location: index.php?page=perfil");
     exit();
-    }
+}
+?>

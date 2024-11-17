@@ -32,15 +32,31 @@ $stmt->bindParam(':diet_id', $diet_id);
 $stmt->execute();
 
 // Verificar si la dieta está en favoritos
-$stmt = $conn->prepare("SELECT id FROM user_favorites WHERE user_id = :user_id AND diet_id = :diet_id");
+$stmt = $conn->prepare("SELECT id FROM user_favorites WHERE user_id = :user_id AND favorite_id = :diet_id AND favorite_type = 'diet'");
 $stmt->bindParam(':user_id', $_SESSION['user_id']);
 $stmt->bindParam(':diet_id', $diet_id);
 $stmt->execute();
 $is_favorite = $stmt->rowCount() > 0;
+
+// Verificar si la dieta ya está en la lista de pendientes del usuario
+$user_id = $_SESSION['user_id'];
+$stmt = $conn->prepare("SELECT * FROM user_pending_items WHERE user_id = :user_id AND item_id = :diet_id AND item_type = 'diet' AND completed = FALSE");
+$stmt->bindParam(':user_id', $user_id);
+$stmt->bindParam(':diet_id', $diet_id);
+$stmt->execute();
+$is_pending = $stmt->fetch(PDO::FETCH_ASSOC);
+
 ?>
+
+
 
 <div class="container">
     <div class="diet-details">
+        <a href="index.php?page=dietas" class="btn-back" aria-label="Volver a la lista de dietas">
+            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+        </a>
         <h1><?php echo htmlspecialchars($diet['name']); ?></h1>
         <img src="<?php echo htmlspecialchars($diet['image_url']); ?>" alt="<?php echo htmlspecialchars($diet['name']); ?>" class="diet-image">
         <p><strong>Objetivo:</strong> <?php echo htmlspecialchars($diet['objective']); ?></p>
@@ -48,38 +64,76 @@ $is_favorite = $stmt->rowCount() > 0;
         <p><strong>Calorías objetivo:</strong> <?php echo htmlspecialchars($diet['calorie_target']); ?></p>
         <p><strong>Descripción:</strong> <?php echo nl2br(htmlspecialchars($diet['description'])); ?></p>
         
-        <button id="favoriteBtn" class="btn <?php echo $is_favorite ? 'btn-secondary' : 'btn-primary'; ?>" data-id="<?php echo $diet_id; ?>" data-type="diet">
-            <?php echo $is_favorite ? 'Quitar de favoritos' : 'Agregar a favoritos'; ?>
+        <?php if (!$is_pending): ?>
+            <button id="startDietBtn" class="btn btn-primary" data-id="<?php echo $diet['id']; ?>">Empezar Dieta</button>
+        <?php else: ?>
+            <p><br><b>Esta dieta ya está en tu lista de pendientes. <b></br></p>
+        <?php endif; ?>
+
+        <button class="btn btn-favorite" data-id="<?php echo $diet['id']; ?>" data-type="diet">
+            <span class="favorite-icon">&#9733;</span> Añadir a Favoritos
         </button>
     </div>
 </div>
 
+<script src="js/notifications.js"></script>
 <script>
 document.addEventListener('DOMContentLoaded', function() {
-    const favoriteBtn = document.getElementById('favoriteBtn');
-    favoriteBtn.addEventListener('click', function() {
-        const id = this.getAttribute('data-id');
-        const type = this.getAttribute('data-type');
-        const action = this.textContent.trim() === 'Agregar a favoritos' ? 'add' : 'remove';
-        
-        fetch(`/api/${action}_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
+
+    const favoriteButtons = document.querySelectorAll('.btn-favorite');
+    favoriteButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const id = this.getAttribute('data-id');
+            const type = this.getAttribute('data-type');
+            addToFavorites(type, id);
+        });
+    });
+
+    const startDietBtn = document.getElementById('startDietBtn'); 
+    if (startDietBtn) {
+        startDietBtn.addEventListener('click', function() {
+            const dietId = this.getAttribute('data-id');
+            
+            fetch('api/start_diet.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `diet_id=${dietId}`
+            })
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    if (action === 'add') {
-                        this.textContent = 'Quitar de favoritos';
-                        this.classList.remove('btn-primary');
-                        this.classList.add('btn-secondary');
-                    } else {
-                        this.textContent = 'Agregar a favoritos';
-                        this.classList.remove('btn-secondary');
-                        this.classList.add('btn-primary');
-                    }
+                    showNotification('Dieta agregada a pendientes', 'success');
+                    this.style.display = 'none';
+                    const pendingMessage = document.createElement('p');
+                    pendingMessage.textContent = 'Esta dieta ya está en tu lista de pendientes.';
+                    this.parentNode.appendChild(pendingMessage);
                 } else {
-                    alert('Error al actualizar favoritos');
+                    showNotification('Error al agregar la dieta a pendientes', 'error');
                 }
             })
-            .catch(error => console.error('Error:', error));
-    });
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al agregar la dieta a pendientes', 'error');
+            });
+        });
+    }
 });
+
+function addToFavorites(type, id) {
+    fetch(`api/add_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                showNotification('Dieta agregada a favoritos', 'success');
+            } else {
+                showNotification('Error al agregar a favoritos', 'error');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            showNotification('Error al agregar a favoritos', 'error');
+        });
+}
 </script>

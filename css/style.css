@@ -8,16 +8,36 @@
     --color-background: #F2F2F2;
 }
 
+/* Ajustes para hacer el diseño responsivo */
+@media (max-width: 768px) {
+    .routines-grid,
+    .diets-grid,
+    .recent-grid {
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    }
+
+    .btn-back {
+        top: 10px;
+        left: 10px;
+        width: 30px;
+        height: 30px;
+    }
+
+    .btn-back svg {
+        width: 20px;
+        height: 20px;
+    }
+}
+
 body {
     font-family: Arial;
     background-color: var(--color-background);
     color: var(--color-primary);
 }
 
-
 .container {
-    max-width: 400px; /* Ajusta el ancho del contenedor */
-    margin: 50px auto; /* Centra el contenedor verticalmente */
+    max-width: 400px;
+    margin: 50px auto; 
     padding: 30px;
     background-color: white;
     border-radius: 10px;
@@ -31,20 +51,27 @@ body {
     padding: 20px;
 }
 
+.container3 {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+
+}
+
 .container h2 {
     text-align: center;
     margin-bottom: 20px;
-    color: var(--color-primary); /* Usa el color primario de tu paleta */
+    color: var(--color-primary); 
   }
-  
-.form-group {
+
+  .form-group {
     margin-bottom: 20px;
   }
   
 .form-group label {
     display: block;
     margin-bottom: 5px;
-    color: var(--color-primary); /* Usa el color primario de tu paleta */
+    color: var(--color-primary); 
   }
   
 .form-group input {
@@ -83,7 +110,7 @@ body {
     display: inline-block;
     padding: 10px 20px;
     border: none;
-    border-radius: 5px;
+    border-radius: 20px;
     cursor: pointer;
     text-decoration: none;
     transition: background-color 0.3s ease;
@@ -92,6 +119,11 @@ body {
 .btn-primary {
     background-color: var(--color-accent);
     color: white;
+}
+
+.btn-primary a {
+    color: white; 
+    text-decoration: none; 
 }
 
 .btn-primary:hover {
@@ -109,6 +141,7 @@ body {
 
 .btn-tertiary {
     background-color: var(--color-tertiary);
+    color: white;
 }
 
 .btn-tertiary a {
@@ -129,11 +162,11 @@ body {
 /* Estilos para la cuadrícula de rutinas y dietas */
 .routines-grid,
 .diets-grid,
-.recen  t-grid {
+.recent-grid t-grid {
 
     display: grid;
-    grid-template-columns: repeat(3, 1fr); /* Crea 3 columnas con igual ancho */
-    gap: 20px; /* Espacio entre las cards */
+    grid-template-columns: repeat(3, 1fr); 
+    gap: 20px; 
 }
 
 .routine-card,
@@ -230,11 +263,36 @@ body {
     cursor: pointer;
   }
 
-/* Estilos para la sección de recientes */
-.recent-section {
-    margin-top: 40px;
+
+.options input[type="text"] {
+    height: 40px;
+    width: 100%;
+    padding: 8px; 
+    border: 1px solid #ccc;
+    border-radius: 4px;
 }
 
+.options select{
+    height: 40px;
+    width: 100%;
+    padding: 8px; 
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 15px;
+}
+
+.options textarea {
+    height: 80px;
+    width: 96%;
+    padding: 8px; 
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    margin-bottom: 10px;
+}
+
+
+/* Estilos para la sección de recientes */
+  
 .recent-section h2 {
     font-size: 1.5rem;
     margin-bottom: 20px;
@@ -290,6 +348,42 @@ body {
     text-align: center;
 }
 
+.footer-section a{
+    color: white;
+    text-decoration: none;
+}
+
+.footer-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    text-align: start;
+  }
+
+  .social-links {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    gap: 10px;
+  }
+  
+  .social-links li a {
+    display: block;
+    width: 32px;
+    height: 32px;
+  }
+  
+  .social-links img {
+    width: 100%;
+    color: white;
+    height: 100%;
+  }
+  
+  .copyright {
+    text-align: center;
+    margin-top: 20px;
+  }
+
 /* Estilos para el dashboard */
 .dashboard {
     display: grid;
@@ -306,26 +400,195 @@ body {
 
 /* Estilos para los formularios */
 .form-register, .form-profile {
-    max-width: 400px;
-    margin: 0 auto;
+    max-width: 350px;
+    margin: 0 100px;
+}
+
+.profile-favorites {
+    margin-top: 20px ;
+    margin-bottom: 20px;
 }
 
 .profile-picture-header {
-    width:50px; 
+    width:53px; 
     height: 50px;
-    margin-left: 20px;
+    margin-left: 10px;
     border-radius: 50%;
 }
 
 .profile-picture {
-    width: 150px; 
-    height: 150px;
-    border-radius: 50%; 
+    width: 250px; 
+    height: 250px;
+    border-radius: 20%; 
     overflow: hidden; 
   }
   
-  .profile-picture img {
+.profile-picture img {
     width: 100%;
     height: 100%;
     object-fit: cover; 
+}
+
+
+/* Estilos para la barra de búsqueda */
+.search-container {
+    height: auto;
+    display: flex;
+    margin-bottom: 30px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 10px;
+}
+
+.weight-input {
+    width: auto;
+    padding: 10px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 15px;
+}
+
+/* Estilos para el botón de regresar */
+.btn-back {
+    top: 20px;
+    left: 20px;
+    background-color: var(--color-primary);
+    color: white;
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.btn-back:hover {
+    background-color: var(--color-secondary);
+}
+
+.btn-back svg {
+    width: 24px;
+    height: 24px;
+}
+
+.notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    padding: 15px 20px;
+    border-radius: 4px;
+    color: white;
+    font-weight: bold;
+    opacity: 0;
+    transform: translateY(-20px);
+    transition: opacity 0.3s, transform 0.3s;
+    z-index: 1000;
+}
+
+input[type="checkbox"] {
+    width: 20px;
+    height: 20px;
+}
+
+label {
+    cursor: pointer;
+}
+
+.notification.show {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.notification.success {
+    background-color: #4CAF50;
+}
+
+.notification.error {
+    background-color: #f44336;
+}
+
+.notification.info {
+    background-color: #2196F3;
+}
+
+/* Estilos para el dashboard */
+.dashboard {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 20px;
+    margin-bottom: 40px;
+}
+
+.dashboard-section {
+    background-color: white;
+    border-radius: 8px;
+    padding: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-section h2 {
+    margin-top: 0;
+    margin-bottom: 15px;
+    font-size: 1.2rem;
+    color: var(--color-primary);
+}
+
+.dashboard-section ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+.dashboard-section ul li {
+    margin-bottom: 10px;
+}
+
+.dashboard-section ul li a {
+    color: var(--color-primary);
+    text-decoration: none;
+}
+
+.dashboard-section ul li a:hover {
+    text-decoration: underline;
+}
+
+/* Estilos para el botón de favoritos */
+.btn-favorite {
+    background-color: transparent;
+    border: 1px solid var(--color-primary);
+    color: var(--color-primary);
+    transition: background-color 0.3s, color 0.3s;
+}
+
+.btn-favorite:hover,
+.btn-favorite.active {
+    background-color: var(--color-primary);
+    color: white;
+}
+
+.logo img {
+    height: 60px; 
   }
+
+ .admin-options {
+    display: grid;       
+    gap: 10px;          
+    margin-bottom: 20px; 
+  }
+  
+.btn-admin {
+    background-color: var(--color-accent);
+    color: white;
+    width: 70%;
+}
+
+.btn-admin:hover{
+    background-color: var(--color-highlight);
+    color: white;
+}

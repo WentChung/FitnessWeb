@@ -6,7 +6,7 @@ function isLoggedIn() {
 }
 
 function isAdmin() {
-    return isset($_SESSION['is_admin']) && $_SESSION['is_admin'] === true;
+    return ($_SESSION['is_admin'] == 1) == true;
 }
 
 function redirectIfNotLoggedIn() {

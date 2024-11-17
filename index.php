@@ -24,22 +24,35 @@ if (isLoggedIn()) {
             include 'views/perfil.php';
             break;
         case 'update_profile':
-            include 'views/update_profile.php';
+            include 'api/update_profile.php';
+            break;
+        case 'add_routine_process':
+            include 'api/add_routine_process.php';
+            break;
+        case 'add_diet_process':
+            include 'api/add_diet_process.php';
             break;
         case 'logout':
             include 'views/logout.php';
+            break;
         case 'routine_details':
             include 'views/routine_details.php';
             break;
         case 'diet_details':
             include 'views/diet_details.php';
+            break;
+        case 'favorites':
+            include 'views/favorites.php';
+            break;  
+        case 'add_diet':
+            include 'views/add_diet.php';
+            break;
         case 'add_routine':
             include 'views/add_routine.php';
             break;
-        case 'add_dieta':
-            include 'views/add_dieta.php';
-        case 'add_favorite':
-            include 'api/add_favorite.php';
+        case 'manage_content':
+            include 'views/manage_content.php';
+            break;    
         default:
             include 'views/home.php';
         
@@ -50,13 +63,13 @@ if (isLoggedIn()) {
             include 'views/login.php';
             break;
         case 'login_process': 
-            include 'views/login_process.php';
+            include 'api/login_process.php';
             break;
         case 'registro':
             include 'views/registro.php';
             break;
         case 'registro_process':
-            include 'views/registro_process.php';
+            include 'api/registro_process.php';
             break;
         default:
             include 'views/login.php'; 

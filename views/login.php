@@ -1,6 +1,7 @@
+
 <div class="container">
     <h2>Iniciar sesión</h2>
-    <form action="login_process" method="POST">
+    <form action="login_process" method="POST" id="loginForm" >
         <div class="form-group">
             <label for="username">Usuario:</label>
             <input type="text" id="username" name="username" required>

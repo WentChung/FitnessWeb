@@ -1,65 +1,51 @@
 <?php
-header("Content-Type: application/json; charset=UTF-8");
-header("Access-Control-Allow-Methods: POST");
-header("Access-Control-Max-Age: 3600");
-header("Access-Control-Allow-Headers: Content-Type, Access-Control-Allow-Headers, Authorization, X-Requested-With");
+    require_once '../includes/database.php';
+    require_once '../includes/functions.php';
 
-require_once './includes/database.php';
-require_once './includes/functions.php';
+    header('Content-Type: application/json');
 
-session_start();
+    if (!isset($_SESSION['user_id'])) {
+        echo json_encode(['success' => false, 'message' => 'Usuario no autenticado']);
+        exit;
+    }
 
-if (!isLoggedIn()) {
-    http_response_code(401);
-    echo json_encode(array("message" => "Unauthorized"));
-    exit();
-}
+    $user_id = $_SESSION['user_id'];
+    $type = $_GET['type'] ?? '';
+    $id = $_GET['id'] ?? '';
 
-$db = new Database();
-$conn = $db->getConnection();
+    if (empty($type) || empty($id)) {
+        echo json_encode(['success' => false, 'message' => 'Parámetros inválidos']);
+        exit;
+    }
 
-$type = isset($_GET['type']) ? sanitizeInput($_GET['type']) : '';
-$id = isset($_GET['id']) ? intval($_GET['id']) : 0;
+    $db = new Database();
+    $conn = $db->getConnection();
 
-if (empty($type) || $id === 0) {
-    http_response_code(400);
-    echo json_encode(array("message" => "Missing required parameters"));
-    exit();
-}
+    // Verificar si ya existe en favoritos
+    $stmt = $conn->prepare("SELECT * FROM user_favorites WHERE user_id = :user_id AND favorite_type = :type AND favorite_id = :id");
+    $stmt->bindParam(':user_id', $user_id);
+    $stmt->bindParam(':type', $type);
+    $stmt->bindParam(':id', $id);   
+    $stmt->execute();
 
-$table = ($type === 'routine') ? 'routines' : 'diets';
-$column = $type . '_id';
+    if ($stmt->rowCount() > 0) {
+        // Si ya existe, lo eliminamos (toggle)
+        $stmt = $conn->prepare("DELETE FROM user_favorites WHERE user_id = :user_id AND favorite_type = :type AND favorite_id = :id");
+        $action = 'removed';
+    } else {
+        // Si no existe, lo agregamos
+        $stmt = $conn->prepare("INSERT INTO user_favorites (user_id, favorite_type, favorite_id) VALUES (:user_id, :type, :id)");
+        $action = 'added';
+    }
 
-// Verificar si el elemento existe
-$stmt = $conn->prepare("SELECT id FROM $table WHERE id = :id");
-$stmt->bindParam(':id', $id);
-$stmt->execute();
+    $stmt->bindParam(':user_id', $user_id);
+    $stmt->bindParam(':type', $type);
+    $stmt->bindParam(':id', $id);
 
-if ($stmt->rowCount() === 0) {
-    http_response_code(404);
-    echo json_encode(array("message" => "Item not found"));
-    exit();
-}
-
-// Verificar si ya está en favoritos
-$stmt = $conn->prepare("SELECT id FROM user_favorites WHERE user_id = :user_id AND $column = :item_id");
-$stmt->bindParam(':user_id', $_SESSION['user_id']);
-$stmt->bindParam(':item_id', $id);
-$stmt->execute();
-
-if ($stmt->rowCount() > 0) {
-    echo json_encode(array("success" => true, "message" => "Already in favorites"));
-    exit();
-}
-
-// Agregar a favoritos
-$stmt = $conn->prepare("INSERT INTO user_favorites (user_id, $column) VALUES (:user_id, :item_id)");
-$stmt->bindParam(':user_id', $_SESSION['user_id']);
-$stmt->bindParam(':item_id', $id);
-
-if ($stmt->execute()) {
-    echo json_encode(array("success" => true, "message" => "Added to favorites successfully"));
-} else {
-    http_response_code(500);
-    echo json_encode(array("message" => "Error adding to favorites"));
-}
+    if ($stmt->execute()) {
+        echo json_encode(['success' => true, 'message' => "$action succesfully", 'action' => $action]);
+    } else {
+        echo json_encode(['success' => false, 'message' => 'Error al procesar la solicitud']);
+    }
+    
+?>
