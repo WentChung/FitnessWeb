@@ -47,15 +47,15 @@ redirectIfNotAdmin()
         </form>
     </div>
 
-    <script src="js/notifications.js"></script>
+   <script src="js/notifications.js"></script>
     <script>
     document.addEventListener('DOMContentLoaded', function() {
-        const form = document.getElementById('addDietForm');
+        const form = document.getElementById('addRoutineForm');
         form.addEventListener('submit', function(e) {
             e.preventDefault();
             const formData = new FormData(this);
 
-            fetch('api/add_diet_process.php', {
+            fetch('api/add_routine.php', {
                 method: 'POST',
                 body: formData
             })
@@ -70,7 +70,7 @@ redirectIfNotAdmin()
             })
             .catch(error => {
                 console.error('Error:', error);
-                showNotification('Error al agregar la dieta', 'error');
+                showNotification('Error al agregar la rutina', 'error');
             });
         });
     });

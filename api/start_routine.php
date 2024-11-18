@@ -31,14 +31,12 @@ if ($stmt->fetch()) {
     exit;
 }
 
-// Agregar la rutina a la lista de pendientes
 $stmt = $conn->prepare("INSERT INTO user_pending_items (user_id, item_type, item_id, start_date) VALUES (:user_id, 'routine', :routine_id, CURDATE())");
 $stmt->bindParam(':user_id', $user_id);
 $stmt->bindParam(':routine_id', $routine_id);
 
 if ($stmt->execute()) {
     echo json_encode(['success' => true, 'message' => 'Rutina agregada a pendientes']);
-    header("Location: index.php?page=login");
 } else {
     echo json_encode(['success' => false, 'message' => 'Error al agregar la rutina a pendientes']);
 }

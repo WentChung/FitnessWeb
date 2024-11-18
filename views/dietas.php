@@ -7,13 +7,18 @@ redirectIfNotLoggedIn();
 $db = new Database();
 $conn = $db->getConnection();
 
-// Obtener filtros y ordenamiento
+$stmt = $conn->prepare("SELECT id FROM user_favorites WHERE user_id = :user_id AND favorite_id = :routine_id AND favorite_type = 'routine'");
+$stmt->bindParam(':user_id', $_SESSION['user_id']);
+$stmt->bindParam(':routine_id', $routine_id);
+$stmt->execute();
+$is_favorite = $stmt->rowCount() > 0;
+
+// Obtener filtros
 $objective = isset($_GET['objective']) ? sanitizeInput($_GET['objective']) : '';
 $diet_type = isset($_GET['diet_type']) ? sanitizeInput($_GET['diet_type']) : '';
 $sort = isset($_GET['sort']) ? sanitizeInput($_GET['sort']) : 'name';
 $order = isset($_GET['order']) ? sanitizeInput($_GET['order']) : 'ASC';
 
-// Construir la consulta SQL
 $sql = "SELECT * FROM diets WHERE 1=1";
 if (!empty($objective)) {
     $sql .= " AND objective = :objective";
@@ -86,9 +91,9 @@ $diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 <p>Objetivo: <?php echo htmlspecialchars($diet['objective']); ?></p>
                 <p>Tipo: <?php echo htmlspecialchars($diet['diet_type']); ?></p>
                 <p>Calorías: <?php echo htmlspecialchars($diet['calorie_target']); ?></p>
-                <a href="diet_details?id=<?php echo $diet['id']; ?>" class="btn btn-secondary">Ver detalles</a>
-                <button class="btn btn-favorite" data-id="<?php echo $diet['id']; ?>" data-type="diet">
-                    <span class="favorite-icon">&#9733;</span>
+                <a href="diet_details?id=<?php echo $diet['id']; ?>" class="btn btn-secondary">Ver detalles</a>     
+                <button id="favoriteBtn" class="btn btn-favorite <?php echo $is_favorite ? 'active' : ''; ?>" data-id="<?php echo $diet['id']; ?>" data-type="diet">
+                    <?php echo $is_favorite ? '<span class="favorite-icon">&#9733;</span>' : '<span class="favorite-icon">&#9733;</span>'; ?>
                 </button>
             </div>
         <?php endforeach; ?>
@@ -115,37 +120,46 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     });
 
+    const favoriteButton = document.querySelector('.btn-favorite');
+
     dietsGrid.addEventListener('click', function(e) {
         if (e.target.classList.contains('btn-favorite') || e.target.closest('.btn-favorite')) {
-            const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
-            const dietId = button.getAttribute('data-id');
-            addToFavorites('diet', dietId, button);
+        const button = e.target.classList.contains('btn-favorite') ? e.target : e.target.closest('.btn-favorite');
+        const routineId = button.getAttribute('data-id');
+        addToFavorites('diet', routineId, button);
         }
     });
 
     function addToFavorites(type, id, button) {
-        fetch(`api/add_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    showNotification(data.message, 'success');
-                    updateFavoriteButton(button, data.action);
-                } else {
-                    showNotification('Error al procesar favorito', 'error');
-                }
-            })
-            .catch(error => {
-                console.error('Error:', error);
-                showNotification('Error al procesar favorito', 'error');
-            });
-    }
+    const isFavorite = button.classList.contains('active'); 
 
-    function updateFavoriteButton(button, action) {
-        if (action === 'added') {
-            button.classList.add('active');
-        } else {
-            button.classList.remove('active');
+    fetch(`api/add_favorite.php?type=${type}&id=${id}`, { 
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `is_favorite=${isFavorite}` 
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+        if (data.action === 'added') {
+            showNotification('Dieta agregada a favoritos', 'success');
+            button.classList.add('active'); 
+            button.innerHTML = '<span class="favorite-icon">&#9733;</span> Quitar de favoritos';
+        } else if (data.action === 'removed') {
+            showNotification('Dieta removida de favoritos', 'success');
+            button.classList.remove('active'); 
+            button.innerHTML = '<span class="favorite-icon">&#9733;</span> Agregar a favoritos';
         }
+        } else {
+        showNotification('Error al procesar favorito', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al procesar favorito', 'error');
+    });
     }
 });
 </script>

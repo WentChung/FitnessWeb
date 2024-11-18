@@ -25,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         }
     } else {
         $error = "Usuario no encontrado";
+        echo "<script>showNotification('Inicio de sesión exitoso', 'success');</script>";
     }
 
     if (isset($error)) {
@@ -44,3 +45,4 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
 }
 ?>
+

@@ -31,14 +31,14 @@ $stmt->bindParam(':user_id', $_SESSION['user_id']);
 $stmt->bindParam(':diet_id', $diet_id);
 $stmt->execute();
 
-// Verificar si la dieta está en favoritos
+
 $stmt = $conn->prepare("SELECT id FROM user_favorites WHERE user_id = :user_id AND favorite_id = :diet_id AND favorite_type = 'diet'");
 $stmt->bindParam(':user_id', $_SESSION['user_id']);
 $stmt->bindParam(':diet_id', $diet_id);
 $stmt->execute();
 $is_favorite = $stmt->rowCount() > 0;
 
-// Verificar si la dieta ya está en la lista de pendientes del usuario
+
 $user_id = $_SESSION['user_id'];
 $stmt = $conn->prepare("SELECT * FROM user_pending_items WHERE user_id = :user_id AND item_id = :diet_id AND item_type = 'diet' AND completed = FALSE");
 $stmt->bindParam(':user_id', $user_id);
@@ -70,8 +70,9 @@ $is_pending = $stmt->fetch(PDO::FETCH_ASSOC);
             <p><br><b>Esta dieta ya está en tu lista de pendientes. <b></br></p>
         <?php endif; ?>
 
-        <button class="btn btn-favorite" data-id="<?php echo $diet['id']; ?>" data-type="diet">
-            <span class="favorite-icon">&#9733;</span> Añadir a Favoritos
+        
+        <button id="favoriteBtn" class="btn btn-favorite <?php echo $is_favorite ? 'active' : ''; ?>" data-id="<?php echo $diet_id; ?>" data-type="diet">
+            <?php echo $is_favorite ? '☆ Quitar de favoritos' : '☆ Agregar a favoritos'; ?>
         </button>
     </div>
 </div>
@@ -80,14 +81,6 @@ $is_pending = $stmt->fetch(PDO::FETCH_ASSOC);
 <script>
 document.addEventListener('DOMContentLoaded', function() {
 
-    const favoriteButtons = document.querySelectorAll('.btn-favorite');
-    favoriteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            const type = this.getAttribute('data-type');
-            addToFavorites(type, id);
-        });
-    });
 
     const startDietBtn = document.getElementById('startDietBtn'); 
     if (startDietBtn) {
@@ -119,21 +112,49 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+const favoriteButton = document.querySelector('.btn-favorite'); 
+
+favoriteButton.addEventListener('click', function() {
+    const dietId = this.getAttribute('data-id');
+    addToFavorites('diet', dietId, this); 
 });
 
-function addToFavorites(type, id) {
-    fetch(`api/add_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Dieta agregada a favoritos', 'success');
-            } else {
-                showNotification('Error al agregar a favoritos', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error al agregar a favoritos', 'error');
-        });
+function addToFavorites(type, id, button) {
+    const isFavorite = button.classList.contains('active'); 
+
+    fetch(`api/add_favorite.php?type=${type}&id=${id}`, { 
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `is_favorite=${isFavorite}` 
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification(data.message, 'success');
+            updateFavoriteButton(button, data.action);
+        } else {
+            showNotification('Error al procesar favorito', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al procesar favorito', 'error');
+    });
 }
+
+function updateFavoriteButton(button, action) {
+    if (action === 'added') {
+        button.classList.add('active');
+        button.textContent = '☆ Quitar de favoritos'; 
+    } else {
+        button.classList.remove('active');
+        button.textContent = '☆ Agregar a favoritos'; 
+    }
+}
+});
+
+
 </script>

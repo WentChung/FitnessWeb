@@ -42,10 +42,8 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    // Hashear la contraseña
     $hashed_password = password_hash($password, PASSWORD_DEFAULT);
 
-    // Insertar el nuevo usuario
     $stmt = $conn->prepare("INSERT INTO users (username, email, password) VALUES (:username, :email, :password)");
     $stmt->bindParam(":username", $username);
     $stmt->bindParam(":email", $email);

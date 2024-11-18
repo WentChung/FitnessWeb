@@ -3,6 +3,9 @@ require_once './includes/database.php';
 require_once './includes/functions.php';
 
 header('Content-Type: application/json');
+//validacion de admin
+
+redirectIfNotAdmin();
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
 

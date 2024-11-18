@@ -41,19 +41,17 @@ $stmt->bindParam(':user_id', $user_id);
 $stmt->execute();
 $last_weight = $stmt->fetch(PDO::FETCH_ASSOC);
 
-// Obtener los últimos 7 pesos registrados
+
 $stmt = $conn->prepare("SELECT weight, DATE(date) AS date FROM user_weight_tracking WHERE user_id = :user_id ORDER BY date DESC, id DESC LIMIT 7");
 $stmt->bindParam(':user_id', $user_id);
 $stmt->execute();
 $weight_history = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener calorías consumidas en las últimas 24 horas
 $stmt = $conn->prepare("SELECT SUM(calories) as total_calories FROM user_calorie_intake WHERE user_id = :user_id AND date >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)");
 $stmt->bindParam(':user_id', $user_id);
 $stmt->execute();
 $calories_consumed = $stmt->fetch(PDO::FETCH_ASSOC)['total_calories'] ?? 0;
 
-// Obtener rutinas completadas en los últimos 7 días
 $stmt = $conn->prepare("SELECT COUNT(*) as completed_routines FROM user_completed_routines WHERE user_id = :user_id AND completion_date >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)");
 $stmt->bindParam(':user_id', $user_id);
 $stmt->execute();
@@ -223,6 +221,7 @@ document.addEventListener('DOMContentLoaded', function() {
         .catch(error => {
             console.error('Error:', error);
             showNotification('Error al registrar el peso', 'error');
+            window.location.reload();
         });
     });
 

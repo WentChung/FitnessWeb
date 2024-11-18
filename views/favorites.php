@@ -9,7 +9,7 @@ $conn = $db->getConnection();
 
 $user_id = $_SESSION['user_id'];
 
-// Obtener rutinas favoritas
+
 $stmt = $conn->prepare("
     SELECT r.* 
     FROM routines r
@@ -20,7 +20,6 @@ $stmt->bindParam(':user_id', $user_id);
 $stmt->execute();
 $favorite_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-// Obtener dietas favoritas
 $stmt = $conn->prepare("
     SELECT d.* 
     FROM diets d
@@ -86,7 +85,12 @@ function addToFavorites(type, id) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                showNotification('Rutina agregada a favoritos', 'success');
+                showNotification(data.message, 'success');
+                if (data.action === 'removed') {
+                }
+                setTimeout(function() {
+                window.location.reload();
+                }, 1000);
             } else {
                 showNotification('Error al agregar a favoritos', 'error');
             }

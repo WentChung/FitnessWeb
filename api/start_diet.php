@@ -31,7 +31,6 @@ if ($stmt->fetch()) {
     exit;
 }
 
-// Agregar la dieta a la lista de pendientes
 $stmt = $conn->prepare("INSERT INTO user_pending_items (user_id, item_type, item_id, start_date) VALUES (:user_id, 'diet', :diet_id, CURDATE())");
 $stmt->bindParam(':user_id', $user_id);
 $stmt->bindParam(':diet_id', $diet_id);

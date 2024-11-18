@@ -29,7 +29,6 @@
     $stmt->execute();
 
     if ($stmt->rowCount() > 0) {
-        // Si ya existe, lo eliminamos (toggle)
         $stmt = $conn->prepare("DELETE FROM user_favorites WHERE user_id = :user_id AND favorite_type = :type AND favorite_id = :id");
         $action = 'removed';
     } else {

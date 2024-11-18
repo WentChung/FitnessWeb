@@ -31,7 +31,6 @@ $stmt->bindParam(':user_id', $_SESSION['user_id']);
 $stmt->bindParam(':routine_id', $routine_id);
 $stmt->execute();
 
-//Verificar si la rutina está en favoritos
 $stmt = $conn->prepare("SELECT id FROM user_favorites WHERE user_id = :user_id AND favorite_id = :routine_id AND favorite_type = 'routine'");
 $stmt->bindParam(':user_id', $_SESSION['user_id']);
 $stmt->bindParam(':routine_id', $routine_id);
@@ -69,8 +68,8 @@ $is_pending = $stmt->fetch(PDO::FETCH_ASSOC);
             <p>Esta rutina ya está en tu lista de pendientes.</p>
         <?php endif; ?>
         
-        <button class="btn btn-favorite" data-id="<?php echo $routine['id']; ?>" data-type="routine">
-            <span class="favorite-icon">&#9733;</span> Añadir a Favoritos
+        <button id="favoriteBtn" class="btn btn-favorite <?php echo $is_favorite ? 'active' : ''; ?>" data-id="<?php echo $routine['id']; ?>" data-type="routine">
+            <?php echo $is_favorite ? '<span class="favorite-icon">&#9733;</span> Quitar de favoritos' : '<span class="favorite-icon">&#9733;</span> Agregar a favoritos'; ?>
         </button>
     </div>
 </div>
@@ -97,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     showNotification('Rutina agregada a pendientes', 'success');
                     this.style.display = 'none';
                     const pendingMessage = document.createElement('p');
-                    pendingMessage.textContent = 'Esta rutina ya está en tu lista de pendientes.';
+                    pendingMessage.textContent = '<b>Esta rutina ya está en tu lista de pendientes.</b>';
                     this.parentNode.appendChild(pendingMessage);
                 } else {
                     showNotification('Error al agregar la rutina a pendientes', 'error');
@@ -110,29 +109,43 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    const favoriteButtons = document.querySelectorAll('.btn-favorite');
-    favoriteButtons.forEach(button => {
-        button.addEventListener('click', function() {
-            const id = this.getAttribute('data-id');
-            const type = this.getAttribute('data-type');
-            addToFavorites(type, id);
-        });
-    });
-});
+    const favoriteButton = document.querySelector('.btn-favorite'); 
 
-function addToFavorites(type, id) {
-    fetch(`api/add_favorite.php?type=${type}&id=${id}`, { method: 'POST' })
-        .then(response => response.json())
-        .then(data => {
-            if (data.success) {
-                showNotification('Rutina agregada a favoritos', 'success');
-            } else {
-                showNotification('Error al agregar a favoritos', 'error');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            showNotification('Error al agregar a favoritos', 'error');
-        });
-}
+    favoriteButton.addEventListener('click', function() {
+        const routineId = this.dataset.id;
+        addToFavorites('routine', routineId, this);
+    });
+
+    function addToFavorites(type, id, button) {
+    const isFavorite = button.classList.contains('active'); 
+
+    fetch(`api/add_favorite.php?type=${type}&id=${id}`, { 
+        method: 'POST',
+        headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: `is_favorite=${isFavorite}` 
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+        if (data.action === 'added') {
+            showNotification('Rutina agregada a favoritos', 'success');
+            button.classList.add('active'); 
+            button.innerHTML = '<span class="favorite-icon">&#9733;</span> Quitar de favoritos';
+        } else if (data.action === 'removed') {
+            showNotification('Rutina removida de favoritos', 'success');
+            button.classList.remove('active'); 
+            button.innerHTML = '<span class="favorite-icon">&#9733;</span> Agregar a favoritos';
+        }
+        } else {
+        showNotification('Error al procesar favorito', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showNotification('Error al procesar favorito', 'error');
+    });
+    }
+});
 </script>
