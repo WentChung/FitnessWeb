@@ -290,6 +290,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         const element = document.getElementById(`diet-${id}`);
                         if (element) element.parentNode.remove();
                     });
+                    
+                    // Actualizar las calorías consumidas en las últimas 24h
+                    const caloriesElement = document.querySelector('.dashboard-section p:nth-of-type(2)');
+                    caloriesElement.textContent = `Calorías consumidas en las últimas 24h: ${data.total_calories} kcal`;
                 } else {
                     showNotification(data.message, 'error');
                 }
