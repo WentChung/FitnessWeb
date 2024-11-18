@@ -4,8 +4,15 @@ require_once './includes/database.php';
 
 redirectIfNotLoggedIn();
 
+
 $db = new Database();
 $conn = $db->getConnection();
+
+if (isset($_SESSION['notification'])) {
+    $notification = $_SESSION['notification'];
+    echo "<script>showNotification2('{$notification['message']}', '{$notification['type']}');</script>";
+    unset($_SESSION['notification']);
+}
 
 // Obtener información del usuario
 $stmt = $conn->prepare("SELECT * FROM users WHERE id = :user_id");
@@ -57,24 +64,18 @@ $stmt->bindParam(':user_id', $user_id);
 $stmt->execute();
 $completed_routines = $stmt->fetch(PDO::FETCH_ASSOC)['completed_routines'];
 
-// Obtener rutinas pendientes
-$stmt = $conn->prepare("SELECT upi.id, r.name, upi.start_date FROM user_pending_items upi JOIN routines r ON upi.item_id = r.id WHERE upi.user_id = :user_id AND upi.item_type = 'routine' AND upi.completed = FALSE ORDER BY upi.start_date ASC");
-$stmt->bindParam(':user_id', $user_id);
-$stmt->execute();
+$stmt = $conn->prepare("SELECT upi.id, r.name FROM user_pending_items upi 
+                        JOIN routines r ON upi.item_id = r.id 
+                        WHERE upi.user_id = ? AND upi.item_type = 'routine'");
+$stmt->execute([$user_id]);
 $pending_routines = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
 // Obtener dietas pendientes
-$stmt = $conn->prepare("SELECT upi.id, d.name, upi.start_date 
-                        FROM user_pending_items upi 
+$stmt = $conn->prepare("SELECT upi.id, d.name FROM user_pending_items upi 
                         JOIN diets d ON upi.item_id = d.id 
-                        WHERE upi.user_id = :user_id 
-                        AND upi.item_type = 'diet' 
-                        AND upi.completed = FALSE 
-                        ORDER BY upi.start_date ASC");
-$stmt->bindParam(':user_id', $user_id);
-$stmt->execute();
+                        WHERE upi.user_id = ? AND upi.item_type = 'diet'");
+$stmt->execute([$user_id]);
 $pending_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
 
 ?>
 
@@ -108,55 +109,58 @@ $pending_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
         </div>
 
         <div class="dashboard-section">
-                <h2>Rutinas Pendientes</h2>
-                <?php if (empty($pending_routines)): ?>
-                    <p>No tienes rutinas pendientes.</p>
-                <?php else: ?>
-                    <form id="completeRoutinesForm">
-                        <ul id="pendingRoutinesList">
-                            <?php foreach ($pending_routines as $routine): ?>
-                                <li>
-                                    <input type="checkbox" id="routine_<?php echo $routine['id']; ?>" name="routines[]" value="<?php echo $routine['id']; ?>">
-                                    <label for="routine_<?php echo $routine['id']; ?>"><?php echo htmlspecialchars($routine['name']); ?></label>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <button type="submit" class="btn btn-primary">Completar</button>
-                    </form>
-                <?php endif; ?>
-            </div>
+            <h2>Rutinas Pendientes</h2>
+            <?php if (empty($pending_routines)): ?>
+                <p>No tienes rutinas pendientes.</p>
+            <?php else: ?>
+                <form id="complete-routines-form">
+                    <ul>
+                    <?php foreach ($pending_routines as $routine): ?>
+                        <div>
+                            <input type="checkbox" name="routine_ids[]" value="<?php echo $routine['id']; ?>" id="routine-<?php echo $routine['id']; ?>">
+                            <label for="routine-<?php echo $routine['id']; ?>"><?php echo htmlspecialchars($routine['name']); ?></label>
+                        </div>
+                    <?php endforeach; ?>
+                    </ul>
+                    <button type="submit" class="btn btn-primary">Completar Rutinas</button>
+                </form>
+            <?php endif; ?>
+        </div>
 
-            <div class="dashboard-section">
-                <h2>Dietas Pendientes</h2>
-                <?php if (empty($pending_diets)): ?>
-                    <p>No tienes dietas pendientes.</p>
-                <?php else: ?>
-                    <form id="completeDietsForm">
-                        <ul id="pendingDietsList">
-                            <?php foreach ($pending_diets as $diet): ?>
-                                <li>
-                                    <input type="checkbox" id="diet_<?php echo $diet['id']; ?>" name="diets[]" value="<?php echo $diet['id']; ?>">
-                                    <label for="diet_<?php echo $diet['id']; ?>"><?php echo htmlspecialchars($diet['name']); ?></label>
-                                </li>
-                            <?php endforeach; ?>
-                        </ul>
-                        <button type="submit" class="btn btn-primary">Completar</button>
-                    </form>
-                <?php endif; ?>
-            </div>
+        <div class="dashboard-section">
+            <h2>Dietas Pendientes</h2>
+            <?php if (empty($pending_diets)): ?>
+                <p>No tienes dietas pendientes.</p>
+            <?php else: ?>
+                <form id="complete-diets-form">
+                    <ul>
+                    <?php foreach ($pending_diets as $diet): ?>
+                        <div>
+                            <input type="checkbox" name="diet_ids[]" value="<?php echo $diet['id']; ?>" id="diet-<?php echo $diet['id']; ?>">
+                            <label for="diet-<?php echo $diet['id']; ?>"><?php echo htmlspecialchars($diet['name']); ?></label>
+                        </div>
+                    <?php endforeach; ?>
+                    </ul>
+                    <button type="submit" class="btn btn-primary">Completar Dietas</button>
+                </form>
+            <?php endif; ?>
+        </div>
+        
+        <div class="dashboard-section">
         <?php
-
-        if ($_SESSION['is_admin'] == 1) { 
-            echo '<div class="dashboard-section">';
-            echo '<h2>Funciones de Administrador</h2>';
-            echo '<div class="admin-options">';
-            echo '<a href="add_routine" class="btn btn-admin">☆ Añadir nueva rutina</a>';
-            echo '<a href="add_diet" class="btn btn-admin">☆ Añadir nueva dieta</a>';
-            echo '<a href="manage_content" class="btn btn-admin">☆ Gestionar Rutinas y Dietas</a>';
-            echo '</div>';
-            echo '</div>';
-        }
-        ?>
+            if (isAdmin()) { 
+                echo '<div class="dashboard-section">';
+                echo '<h2>Funciones de Administrador</h2>';
+                echo '<div class="admin-options">';
+                echo '<a href="add_routine" class="btn btn-admin">☆ Añadir nueva rutina</a>';
+                echo '<a href="add_diet" class="btn btn-admin">☆ Añadir nueva dieta</a>';
+                echo '<a href="manage_content" class="btn btn-admin">☆ Gestionar Rutinas y Dietas</a>';
+                echo '</div>';
+                echo '</div>';
+            }
+            ?>
+        
+        </div>
     </div>
     <br />
     <section class="recent-section">
@@ -194,8 +198,8 @@ $pending_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const weightForm = document.getElementById('weightForm');
-    const completeRoutinesForm = document.getElementById('completeRoutinesForm');
-    const completeDietsForm = document.getElementById('completeDietsForm');
+    const completeRoutinesForm = document.getElementById('complete-routines-form');
+    const completeDietsForm = document.getElementById('complete-diets-form');
 
     weightForm.addEventListener('submit', function(e) {
         e.preventDefault();
@@ -238,65 +242,64 @@ document.addEventListener('DOMContentLoaded', function() {
     };
     const weightChart = new Chart(document.getElementById('weightChart'), weightChartConfig);
 
-
     if (completeRoutinesForm) {
-            completeRoutinesForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
+        completeRoutinesForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('api/complete_routines.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
 
-                fetch('api/complete_routines.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification(data.message, 'success');
-                        data.completed_ids.forEach(id => {
-                            document.getElementById(`routine_${id}`).closest('li').remove();
-                        });
-                        const completedRoutinesElement = document.querySelector('.dashboard-section p:nth-of-type(3)');
-                        const currentCount = parseInt(completedRoutinesElement.textContent.match(/\d+/)[0]);
-                        completedRoutinesElement.textContent = `Rutinas completadas (últimos 7 días): ${currentCount + data.completed_ids.length}`;
-                    } else {
-                        showNotification(data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Error al completar las rutinas', 'error');
-                });
+                    // Eliminar las rutinas completadas de la lista
+                    formData.getAll('routine_ids[]').forEach(id => {
+                        const element = document.getElementById(`routine-${id}`);
+                        if (element) element.parentNode.remove();
+                    });
+
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar la solicitud', 'error');
             });
-        }
+        });
+    }
 
-        if (completeDietsForm) {
-            completeDietsForm.addEventListener('submit', function(e) {
-                e.preventDefault();
-                const formData = new FormData(this);
+    if (completeDietsForm) {
+        completeDietsForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const formData = new FormData(this);
+            fetch('api/complete_diets.php', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showNotification(data.message, 'success');
 
-                fetch('api/complete_diets.php', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    if (data.success) {
-                        showNotification(data.message, 'success');
-                        data.completed_ids.forEach(id => {
-                            document.getElementById(`diet_${id}`).closest('li').remove();
-                        });
-                        const caloriesElement = document.querySelector('.dashboard-section p:nth-of-type(2)');
-                        const currentCalories = parseInt(caloriesElement.textContent.match(/\d+/)[0]);
-                        caloriesElement.textContent = `Calorías consumidas (últimas 24h): ${currentCalories + data.calories_added} kcal`;
-                    } else {
-                        showNotification(data.message, 'error');
-                    }
-                })
-                .catch(error => {
-                    console.error('Error:', error);
-                    showNotification('Error al completar las dietas', 'error');
-                });
+                    // Eliminar las dietas completadas de la lista
+                    formData.getAll('diet_ids[]').forEach(id => {
+                        const element = document.getElementById(`diet-${id}`);
+                        if (element) element.parentNode.remove();
+                    });
+                } else {
+                    showNotification(data.message, 'error');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                showNotification('Error al procesar la solicitud', 'error');
             });
-        }
-    });
+        });
+    }
+
+});
 </script>

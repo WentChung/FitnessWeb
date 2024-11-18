@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$routine_ids = $_POST['routines'] ?? [];
+$routine_ids = $_POST['routine_ids'] ?? [];
 
 if (empty($routine_ids)) {
     echo json_encode(['success' => false, 'message' => 'No se seleccionaron rutinas para completar']);
@@ -20,37 +20,27 @@ if (empty($routine_ids)) {
 $db = new Database();
 $conn = $db->getConnection();
 
-// Iniciar transacción
-$conn->beginTransaction();
-
 try {
-    $completed_ids = [];
-    foreach ($routine_ids as $routine_id) {
-        // Marcar la rutina como completada en user_pending_items
-        $stmt = $conn->prepare("UPDATE user_pending_items SET completed = TRUE WHERE user_id = :user_id AND item_id = :routine_id AND item_type = 'routine'");
-        $stmt->bindParam(':user_id', $user_id);
-        $stmt->bindParam(':routine_id', $routine_id);
-        $stmt->execute();
+    $conn->beginTransaction();
 
-        // Agregar la rutina a user_completed_routines
-        $stmt = $conn->prepare("INSERT INTO user_completed_routines (user_id, routine_id, completion_date) VALUES (:user_id, :routine_id, CURDATE())");
-        $stmt->bindParam(':user_id', $user_id);
-        $stmt->bindParam(':routine_id', $routine_id);
-        $stmt->execute();
+    $stmt = $conn->prepare("SELECT item_id FROM user_pending_items WHERE id = ? AND user_id = ? AND item_type = 'routine'");
+    $delete_stmt = $conn->prepare("DELETE FROM user_pending_items WHERE id = ? AND user_id = ? AND item_type = 'routine'");
+    $insert_stmt = $conn->prepare("INSERT INTO user_completed_routines (user_id, routine_id, completion_date) VALUES (?, ?, NOW())");
 
-        $completed_ids[] = $routine_id;
+    foreach ($routine_ids as $pending_id) {
+        $stmt->execute([$pending_id, $user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            $routine_id = $result['item_id'];
+            $delete_stmt->execute([$pending_id, $user_id]);
+            $insert_stmt->execute([$user_id, $routine_id]);
+        }
     }
 
-    // Confirmar la transacción
     $conn->commit();
-
-    echo json_encode([
-        'success' => true, 
-        'message' => 'Rutinas marcadas como completadas',
-        'completed_ids' => $completed_ids
-    ]);
+    echo json_encode(['success' => true, 'message' => 'Rutinas completadas con éxito']);
 } catch (Exception $e) {
-    // Revertir la transacción en caso de error
     $conn->rollBack();
-    echo json_encode(['success' => false, 'message' => 'Error al marcar las rutinas como completadas: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error al completar las rutinas: ' . $e->getMessage()]);
 }

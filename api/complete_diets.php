@@ -10,7 +10,7 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $user_id = $_SESSION['user_id'];
-$diet_ids = $_POST['diets'] ?? [];
+$diet_ids = $_POST['diet_ids'] ?? [];
 
 if (empty($diet_ids)) {
     echo json_encode(['success' => false, 'message' => 'No se seleccionaron dietas para completar']);
@@ -20,47 +20,28 @@ if (empty($diet_ids)) {
 $db = new Database();
 $conn = $db->getConnection();
 
-// Iniciar transacción
-$conn->beginTransaction();
-
 try {
-    $completed_ids = [];
-    $total_calories = 0;
-    foreach ($diet_ids as $diet_id) {
-        // Marcar la dieta como completada en user_pending_items
-        $stmt = $conn->prepare("UPDATE user_pending_items SET completed = TRUE WHERE user_id = :user_id AND item_id = :diet_id AND item_type = 'diet'");
-        $stmt->bindParam(':user_id', $user_id);
-        $stmt->bindParam(':diet_id', $diet_id);
-        $stmt->execute();
+    $conn->beginTransaction();
 
-        // Obtener las calorías de la dieta
-        $stmt = $conn->prepare("SELECT calorie_target FROM diets WHERE id = :diet_id");
-        $stmt->bindParam(':diet_id', $diet_id);
-        $stmt->execute();
-        $calories = $stmt->fetch(PDO::FETCH_ASSOC)['calorie_target'];
+    $stmt = $conn->prepare("SELECT item_id FROM user_pending_items WHERE id = ? AND user_id = ? AND item_type = 'diet'");
+    $delete_stmt = $conn->prepare("DELETE FROM user_pending_items WHERE id = ? AND user_id = ? AND item_type = 'diet'");
+    $insert_stmt = $conn->prepare("INSERT INTO user_completed_diets (user_id, diet_id, completion_date) VALUES (?, ?, NOW())");
 
-        // Agregar las calorías consumidas a user_calorie_intake
-        $stmt = $conn->prepare("INSERT INTO user_calorie_intake (user_id, diet_id, calories, date) VALUES (:user_id, :diet_id, :calories, CURDATE())");
-        $stmt->bindParam(':user_id', $user_id);
-        $stmt->bindParam(':diet_id', $diet_id);
-        $stmt->bindParam(':calories', $calories);
-        $stmt->execute();
+    foreach ($diet_ids as $pending_id) {
+        $stmt->execute([$pending_id, $user_id]);
+        $result = $stmt->fetch(PDO::FETCH_ASSOC);
+        
+        if ($result) {
+            $diet_id = $result['item_id'];
 
-        $completed_ids[] = $diet_id;
-        $total_calories += $calories;
+            $delete_stmt->execute([$pending_id, $user_id]);
+            $insert_stmt->execute([$user_id, $diet_id]);
+        }
     }
 
-    // Confirmar la transacción
     $conn->commit();
-
-    echo json_encode([
-        'success' => true, 
-        'message' => 'Dietas marcadas como completadas',
-        'completed_ids' => $completed_ids,
-        'calories_added' => $total_calories
-    ]);
+    echo json_encode(['success' => true, 'message' => 'Dietas completadas con éxito']);
 } catch (Exception $e) {
-    // Revertir la transacción en caso de error
     $conn->rollBack();
-    echo json_encode(['success' => false, 'message' => 'Error al marcar las dietas como completadas: ' . $e->getMessage()]);
+    echo json_encode(['success' => false, 'message' => 'Error al completar las dietas: ' . $e->getMessage()]);
 }

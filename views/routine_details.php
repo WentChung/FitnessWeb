@@ -96,7 +96,7 @@ document.addEventListener('DOMContentLoaded', function() {
                     showNotification('Rutina agregada a pendientes', 'success');
                     this.style.display = 'none';
                     const pendingMessage = document.createElement('p');
-                    pendingMessage.textContent = '<b>Esta rutina ya está en tu lista de pendientes.</b>';
+                    pendingMessage.textContent = 'Esta rutina ya está en tu lista de pendientes.';
                     this.parentNode.appendChild(pendingMessage);
                 } else {
                     showNotification('Error al agregar la rutina a pendientes', 'error');
