@@ -10,7 +10,7 @@ $conn = $db->getConnection();
 
 if (isset($_SESSION['notification'])) {
     $notification = $_SESSION['notification'];
-    echo "<script>showNotification2('{$notification['message']}', '{$notification['type']}');</script>";
+    echo "<script>showNotification('{$notification['message']}', '{$notification['type']}');</script>";
     unset($_SESSION['notification']);
 }
 
@@ -146,7 +146,6 @@ $pending_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
             <?php endif; ?>
         </div>
         
-        <div class="dashboard-section">
         <?php
             if (isAdmin()) { 
                 echo '<div class="dashboard-section">';
@@ -159,8 +158,7 @@ $pending_diets = $stmt->fetchAll(PDO::FETCH_ASSOC);
                 echo '</div>';
             }
             ?>
-        
-        </div>
+
     </div>
     <br />
     <section class="recent-section">

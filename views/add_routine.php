@@ -11,7 +11,7 @@
             </svg>
         </a>
         <h1>Agregar Nueva Rutina</h1>
-        <form id="addRoutineForm" action="add_routine_process" method="POST">
+        <form action="add_routine_process" method="POST">
             <div class="form-group">
                 <label for="name">Nombre de la Rutina:</label>
                 <input type="text" id="name" name="name" required>
