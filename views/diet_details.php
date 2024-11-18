@@ -72,7 +72,7 @@ $is_pending = $stmt->fetch(PDO::FETCH_ASSOC);
 
         
         <button id="favoriteBtn" class="btn btn-favorite <?php echo $is_favorite ? 'active' : ''; ?>" data-id="<?php echo $diet_id; ?>" data-type="diet">
-            <?php echo $is_favorite ? '☆ Quitar de favoritos' : '☆ Agregar a favoritos'; ?>
+            <?php echo $is_favorite ? '<span class="favorite-icon">&#9733;</span> Quitar de favoritos' : '<span class="favorite-icon">&#9733;</span> Agregar a favoritos'; ?>
         </button>
     </div>
 </div>
@@ -148,10 +148,10 @@ function addToFavorites(type, id, button) {
 function updateFavoriteButton(button, action) {
     if (action === 'added') {
         button.classList.add('active');
-        button.textContent = '☆ Quitar de favoritos'; 
+        button.innerHTML =  '<span class="favorite-icon">&#9733;</span> Quitar de favoritos'; 
     } else {
         button.classList.remove('active');
-        button.textContent = '☆ Agregar a favoritos'; 
+        button.innerHTML = '<span class="favorite-icon">&#9733;</span> Agregar a favoritos'; 
     }
 }
 });

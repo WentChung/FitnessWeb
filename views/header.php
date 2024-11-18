@@ -33,8 +33,8 @@ if ($user_id) {
                     <img src="./src/images/FitLife_Logo.png" alt="FitnessApp Logo"> 
                 </a> 
                 <ul class="nav-links">
-                    <li><a href="home">Inicio</a></li>
                     <?php if (isLoggedIn()): ?>
+                        <li><a href="home">Inicio</a></li>
                         <li><a href="rutinas">Rutinas</a></li> 
                         <li><a href="dietas">Dietas</a></li> 
                         <li>
