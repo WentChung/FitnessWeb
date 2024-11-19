@@ -22,8 +22,6 @@ if ($user_id) {
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitnessApp</title>
     <link rel="stylesheet" href="css/style.css">
-    <script src="../js/notifications.js"></script>
-    <script src="/js/script.js"></script> 
 </head>
 <body>
     <header class="site-header">
@@ -36,7 +34,8 @@ if ($user_id) {
                     <?php if (isLoggedIn()): ?>
                         <li><a href="home">Inicio</a></li>
                         <li><a href="rutinas">Rutinas</a></li> 
-                        <li><a href="dietas">Dietas</a></li> 
+                        <li><a href="dietas">Dietas</a></li>
+                        <li><a href="AboutUs">Sobre Nosotros</a></li> 
                         <li>
                             <a href="perfil"> 
                             <img src="<?php echo htmlspecialchars($profile_picture_url); ?>" alt="Foto de perfil" class="profile-picture-header"> 
@@ -44,7 +43,7 @@ if ($user_id) {
                         </li> 
                     <?php else: ?>
                         <li><a href="login">Iniciar sesión</a></li> 
-                        <li><a href="registro">Registrarse</a></li> 
+                        <li><a href="registro">Registrarse</a></li>
                     <?php endif; ?>
                 </ul>
             </nav>
