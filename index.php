@@ -26,6 +26,9 @@ if (isLoggedIn()) {
         case 'update_profile':
             include 'api/update_profile.php';
             break;
+        case 'AboutUs':
+            include 'views/about_us.php';
+            break;
         case 'add_routine_process':
             include 'api/add_routine_process.php';
             break;
