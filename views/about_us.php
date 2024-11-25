@@ -34,6 +34,12 @@ $teamMembers = [
         "role" => "DevOps Engineer",
         "description" => "Experto en automatización y despliegue continuo",
         "image" => "./src/images/FitLife_Logo.png"
+    ],
+    [
+        "name" => "Went Chung",
+        "role" => "Full Stack Engineer",
+        "description" => "Desarrollador versátil con experiencia en múltiples tecnologías",
+        "image" => "./src/images/went.jpeg"
     ]
 ];
 ?>
