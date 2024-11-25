@@ -11,13 +11,18 @@
       </div>
       <div class="footer-section">
         <h3>Legal</h3>
-        <p><a href="terminos.php">Términos y Condiciones</a></p> 
+        <p><a href="terminos.php">Términos y Condiciones</a></p>
+        <p>El contenido de esta página web/aplicación es de carácter informativo y no sustituye el asesoramiento médico o profesional. 
+          Antes de iniciar cualquier programa de ejercicio o dieta, consulte con su médico o especialista. Los resultados pueden variar 
+          según cada persona. No nos hacemos responsables por lesiones, daños o inconvenientes derivados del uso de la información o servicios ofrecidos.</p> 
       </div>
       <div class="footer-section">
         <h3>Redes Sociales</h3>
         <ul class="social-links">
-          <li><a href="#"><img src="./src/images/facebook-svgrepo-com.svg" alt="Facebook"></a></li>
-          <li><a href="#"><img src="./src/images/instagram-svgrepo-com.svg" alt="Instagram"></a></li>
+          <li><a href="#"><img src="./src/images/facebook.png" alt="Facebook"></a></li>
+          <li><a href="#"><img src="./src/images/instagram.png" alt="Instagram"></a></li>
+          <li><a href="#"><img src="./src/images/twitter.png" alt="Twitter"></a></li>
+          <li><a href="#"><img src="./src/images/linkedin.png" alt="Linkedin"></a></li>
         </ul>
       </div>
     </div>
